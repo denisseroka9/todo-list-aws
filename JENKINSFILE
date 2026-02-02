@@ -1,0 +1,12 @@
+pipeline {
+    agent any
+
+    stages {
+	
+        stage('Get Code') {
+            steps {            
+                git 'https://github.com/denisseroka9/todo-list-aws.git'
+            }
+        }
+    }
+}
