@@ -2,12 +2,40 @@ pipeline {
     agent any
 
     stages {
-	
+
         stage('Get Code') {
-            steps {     
-				git branch: 'develop',
-                url: 'https://github.com/denisseroka9/todo-list-aws.git'
+            steps {
+                git branch: 'develop',
+                    url: 'https://github.com/denisseroka9/todo-list-aws.git'
             }
         }
+
+        stage('Static Test') {
+            steps {
+                sh '''
+                    echo "Installing static analysis tools"
+                    python3 -m pip install --upgrade pip
+                    pip3 install flake8 bandit
+
+                    echo "Creating reports directory"
+                    mkdir -p reports
+
+                    echo "Running Flake8"
+                    flake8 src > reports/flake8.txt || true
+
+                    echo "Running Bandit"
+                    bandit -r src -f txt -o reports/bandit.txt || true
+                '''
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'reports/*.txt'
+                }
+            }
+        }
+
     }
 }
+	
+
+
