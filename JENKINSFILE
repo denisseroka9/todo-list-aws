@@ -20,10 +20,10 @@ pipeline {
                     mkdir -p reports
 
                     echo "Running Flake8"
-                    flake8 src > reports/flake8.txt || true
+                     python3 -m flake8 src > reports/flake8.txt || true
 
                     echo "Running Bandit"
-                    bandit -r src -f txt -o reports/bandit.txt || true
+                    python3 -m bandit -r src -f txt -o reports/bandit.txt || true
                 '''
             }
             post {
