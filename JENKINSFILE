@@ -33,6 +33,21 @@ pipeline {
             }
         }
 
+		stage('Deploy SAM') {
+			steps {
+				sh '''
+					echo "Building SAM application"
+					sam build
+
+					echo "Validating SAM template"
+					sam validate
+
+					echo "Deploying to STAGING environment"
+					sam deploy --config-env staging --no-confirm-changeset --no-fail-on-empty-changeset
+				'''
+			}
+		}
+
     }
 }
 	
