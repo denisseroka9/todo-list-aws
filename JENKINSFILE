@@ -46,7 +46,7 @@ pipeline {
 					sam validate
 
 					echo "Deploying to STAGING environment"
-					sam deploy --config-env staging --no-confirm-changeset --no-fail-on-empty-changeset
+					sam deploy --config-env staging --s3-bucket aws-sam-cli-managed-default-samclisourcebucket-4jwk7a6dibi --no-confirm-changeset --no-fail-on-empty-changeset
 				'''
 			}
 		}
