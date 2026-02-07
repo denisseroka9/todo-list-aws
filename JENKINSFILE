@@ -13,9 +13,8 @@ pipeline {
         stage('Static Test') {
             steps {
                 sh '''
-                    echo "Installing static analysis tools"
-                    python3 -m pip install --upgrade pip
-                    pip3 install flake8 bandit
+                    echo "Installing static analysis tools"                    
+                    pip3 install --no-cache-dir flake8 bandit
 
                     echo "Creating reports directory"
                     mkdir -p reports
