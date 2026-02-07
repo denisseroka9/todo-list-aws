@@ -34,6 +34,9 @@ pipeline {
         }
 
 		stage('Deploy SAM') {
+		    environment {
+				AWS_DEFAULT_REGION = 'eu-east-1'
+			}
 			steps {
 				sh '''
 					echo "Building SAM application"
