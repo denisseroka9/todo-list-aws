@@ -50,6 +50,46 @@ pipeline {
 				'''
 			}
 		}
+		
+		stage('Service Tests') {
+			steps {
+				sh '''
+					set -e
+
+					API_URL="https://q1hmhlll14.execute-api.us-east-1.amazonaws.com/Prod"
+
+					echo "POST - Create TODO"
+					CREATE_RESPONSE=$(curl -s -X POST "$API_URL/todos" \
+					  -H "Content-Type: application/json" \
+					  -d '{"title":"ci-test","completed":false}')
+
+					echo "$CREATE_RESPONSE" | grep '"title":"ci-test"'
+					TODO_ID=$(echo "$CREATE_RESPONSE" | jq -r '.id')
+					[ "$TODO_ID" != "null" ]
+
+					echo "GET - List TODOs"
+					LIST_RESPONSE=$(curl -s "$API_URL/todos")
+					echo "$LIST_RESPONSE" | grep 'ci-test'
+
+					echo "GET - Get TODO by ID"
+					GET_RESPONSE=$(curl -s "$API_URL/todos/$TODO_ID")
+					echo "$GET_RESPONSE" | grep "$TODO_ID"
+
+					echo "PUT - Update TODO"
+					UPDATE_RESPONSE=$(curl -s -X PUT "$API_URL/todos/$TODO_ID" \
+					  -H "Content-Type: application/json" \
+					  -d '{"title":"ci-test-updated","completed":true}')
+
+					echo "$UPDATE_RESPONSE" | grep 'ci-test-updated'
+
+					echo "DELETE - Delete TODO"
+					curl -s -X DELETE "$API_URL/todos/$TODO_ID"
+
+					echo "GET - Verify DELETE"
+					curl -s "$API_URL/todos/$TODO_ID" | grep -E 'Not Found|404'
+				'''
+			}
+		}
 
     }
 }
