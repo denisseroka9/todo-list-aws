@@ -75,6 +75,24 @@ pipeline {
 				'''
 			}
 		}
+		
+		stage('Promote') {
+			when {
+				expression { currentBuild.currentResult == 'SUCCESS' }
+			}
+			steps {
+				sh '''
+					echo "Promoting release to master branch"
+
+					git config user.email "ci@jenkins"
+					git config user.name "Jenkins CI"
+
+					git checkout master
+					git merge develop
+					git push origin master
+				'''
+			}
+		}
 
     }
 }
