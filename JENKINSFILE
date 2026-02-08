@@ -71,7 +71,7 @@ pipeline {
 					echo "BASE_URL = $BASE_URL"
 
 					echo "Running integration tests with Pytest"
-					pytest test/integration/todoApiTest.py
+					python3 -m pytest test/integration/todoApiTest.py
 				'''
 			}
 		}
