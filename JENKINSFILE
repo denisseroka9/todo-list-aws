@@ -46,7 +46,7 @@ pipeline {
 					sam validate
 
 					echo "Deploying to STAGING environment"
-					sam deploy --stack-name todo-list-aws-staging-ci --config-env staging  --s3-bucket todo-list-aws-ci-staging-denisse --region us-east-1 --no-confirm-changeset --no-fail-on-empty-changeset
+					sam deploy --stack-name todo-list-aws --config-env staging  --s3-bucket todo-list-aws-ci-staging-denisse --region us-east-1 --no-confirm-changeset --no-fail-on-empty-changeset
 				'''
 			}
 		}
