@@ -9,5 +9,24 @@ pipeline {
                     url: 'https://github.com/denisseroka9/todo-list-aws.git'
             }
         }
+	
+		stage('Deploy SAM') {
+			environment {
+				AWS_DEFAULT_REGION = 'us-east-1'
+			}
+			steps {
+				sh '''
+					echo "Building SAM application"
+					sam build
+
+					echo "Validating SAM template"
+					sam validate
+
+					echo "Deploying to PRODUCTION environment"
+					sam deploy --stack-name todo-list-aws --config-env production --s3-bucket todo-list-aws-cd-production-denisse --region us-east-1 --no-confirm-changeset --no-fail-on-empty-changeset
+				'''
+			}
+		}
+		
 	}
 }	
