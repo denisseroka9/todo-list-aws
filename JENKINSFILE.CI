@@ -78,7 +78,7 @@ pipeline {
 		
 		stage('Promote') {
 			when {
-				success()
+				expression { currentBuild.currentResult == 'SUCCESS' }
 			}
 			steps {
 				withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
