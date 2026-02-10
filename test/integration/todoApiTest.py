@@ -200,7 +200,7 @@ class TestApi(unittest.TestCase):
         )
         print('End - integration test Delete TODO')
     
-        @pytest.mark.readonly
+    @pytest.mark.readonly
     def test_api_listtodos_readonly(self):
         print('---------------------------------------')
         print('Starting - READONLY integration test List TODO')
