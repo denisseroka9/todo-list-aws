@@ -27,6 +27,31 @@ pipeline {
 				'''
 			}
 		}
-		
+	
+	stage('Rest Tests') {
+			environment {
+				AWS_DEFAULT_REGION = 'us-east-1'
+			}
+			steps {
+				sh '''
+					set -e
+
+					echo "Installing test dependencies"
+					pip3 install --no-cache-dir pytest requests
+
+					echo "Obtaining API Base URL from CloudFormation (PRODUCTION)"
+					export BASE_URL=$(aws cloudformation describe-stacks \
+					  --stack-name todo-list-aws \
+					  --query "Stacks[0].Outputs[?OutputKey=='BaseUrlApi'].OutputValue" \
+					  --output text)
+
+					echo "BASE_URL = $BASE_URL"
+
+					echo "Running READONLY integration tests with Pytest"
+					python3 -m pytest -m readonly test/integration/todoApiTest.py
+				'''
+			}
+		}
+	
 	}
 }	
