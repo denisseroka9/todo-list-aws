@@ -1,17 +1,23 @@
 pipeline {
-    agent any
+    agent none
 
     stages {
 
         stage('Get Code') {
+			 agent { label 'deploy' } 
             steps {
                 git branch: 'develop',
                     url: 'https://github.com/denisseroka9/todo-list-aws.git'
+					
+				stash name: 'source-code', includes: '**/*'
             }
         }
 
         stage('Static Test') {
+			agent { label 'deploy' }
             steps {
+				unstash 'source-code'
+				
                 sh '''
                     echo "Installing static analysis tools"                    
                     pip3 install --no-cache-dir flake8 bandit
@@ -34,10 +40,13 @@ pipeline {
         }
 
 		stage('Deploy SAM') {
+			agent { label 'deploy' }
 		    environment {
 				AWS_DEFAULT_REGION = 'us-east-1'
 			}
 			steps {
+				unstash 'source-code'
+			
 				sh '''
 					echo "Building SAM application"
 					sam build
@@ -47,28 +56,36 @@ pipeline {
 
 					echo "Deploying to STAGING environment"
 					sam deploy --stack-name todo-list-aws --config-env staging  --s3-bucket todo-list-aws-ci-staging-denisse --region us-east-1 --no-confirm-changeset --no-fail-on-empty-changeset
+					
+					echo "Obtaining API Base URL from CloudFormation"
+					BASE_URL=$(aws cloudformation describe-stacks \
+                      --stack-name todo-list-aws \
+                      --query "Stacks[0].Outputs[?OutputKey=='BaseUrlApi'].OutputValue" \
+                      --output text)
+					  
+					echo $BASE_URL > base_url.txt
 				'''
+				
+				 stash name: 'api-url', includes: 'base_url.txt'
 			}
 		}
 		
 		stage('Rest Tests') {
+			agent { label 'test' }
 			environment {
 				AWS_DEFAULT_REGION = 'us-east-1'
 			}
 			steps {
+				unstash 'source-code'
+                unstash 'api-url'
+				
 				sh '''
 					set -e
 
 					echo "Installing test dependencies"
 					pip3 install --no-cache-dir pytest requests
 
-					echo "Obtaining API Base URL from CloudFormation"
-					export BASE_URL=$(aws cloudformation describe-stacks \
-					  --stack-name todo-list-aws \
-					  --query "Stacks[0].Outputs[?OutputKey=='BaseUrlApi'].OutputValue" \
-					  --output text)
-
-					echo "BASE_URL = $BASE_URL"
+					export BASE_URL=$(cat base_url.txt)
 
 					echo "Running integration tests with Pytest"
 					python3 -m pytest test/integration/todoApiTest.py
@@ -77,10 +94,13 @@ pipeline {
 		}
 		
 		stage('Promote') {
+			agent { label 'deploy' }
 			when {
 				expression { currentBuild.currentResult == 'SUCCESS' }
 			}
 			steps {
+				unstash 'source-code'
+				
 				withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
 					sh '''
 						echo "Promoting release to master branch"
