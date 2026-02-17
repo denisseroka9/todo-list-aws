@@ -91,6 +91,9 @@ pipeline {
 			steps {
 				withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
 					sh '''
+						echo "Cleaning temporary configuration file"
+						rm -f samconfig.toml
+						
 						echo "Promoting release to master branch"
 
 						git config user.email "ci@jenkins"
