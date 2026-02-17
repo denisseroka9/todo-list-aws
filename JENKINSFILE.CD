@@ -1,0 +1,57 @@
+pipeline {
+    agent any
+
+    stages {
+
+        stage('Get Code') {
+            steps {
+                git branch: 'master',
+                    url: 'https://github.com/denisseroka9/todo-list-aws.git'
+            }
+        }
+	
+		stage('Deploy SAM') {
+			environment {
+				AWS_DEFAULT_REGION = 'us-east-1'
+			}
+			steps {
+				sh '''
+					echo "Building SAM application"
+					sam build
+
+					echo "Validating SAM template"
+					sam validate
+
+					echo "Deploying to PRODUCTION environment"
+					sam deploy --stack-name todo-list-aws --config-env production --s3-bucket todo-list-aws-cd-production-denisse --region us-east-1 --no-confirm-changeset --no-fail-on-empty-changeset
+				'''
+			}
+		}
+	
+		stage('Rest Tests') {
+			environment {
+				AWS_DEFAULT_REGION = 'us-east-1'
+			}
+			steps {
+				sh '''
+					set -e
+
+					echo "Installing test dependencies"
+					pip3 install --no-cache-dir pytest requests
+
+					echo "Obtaining API Base URL from CloudFormation (PRODUCTION)"
+					export BASE_URL=$(aws cloudformation describe-stacks \
+					  --stack-name todo-list-aws \
+					  --query "Stacks[0].Outputs[?OutputKey=='BaseUrlApi'].OutputValue" \
+					  --output text)
+
+					echo "BASE_URL = $BASE_URL"
+
+					echo "Running READONLY integration tests with Pytest"
+					python3 -m pytest -m readonly test/integration/todoApiTest.py
+				'''
+			}
+		}
+	
+	}
+}	
