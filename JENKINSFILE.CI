@@ -7,6 +7,11 @@ pipeline {
             steps {
                 git branch: 'develop',
                     url: 'https://github.com/denisseroka9/todo-list-aws.git'
+					
+				echo "Downloading samconfig.toml for STAGING"
+				sh '''
+					curl -o samconfig.toml https://raw.githubusercontent.com/denisseroka9/todo-list-aws-config/staging/samconfig.toml
+				'''
             }
         }
 
@@ -46,7 +51,7 @@ pipeline {
 					sam validate
 
 					echo "Deploying to STAGING environment"
-					sam deploy --stack-name todo-list-aws --config-env staging  --s3-bucket todo-list-aws-ci-staging-denisse --region us-east-1 --no-confirm-changeset --no-fail-on-empty-changeset
+					sam deploy --config-env staging --no-confirm-changeset --no-fail-on-empty-changeset
 				'''
 			}
 		}
