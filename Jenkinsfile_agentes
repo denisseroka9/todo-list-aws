@@ -19,6 +19,13 @@ pipeline {
 				unstash 'source-code'
 				
                 sh '''
+				
+					echo "User:"
+                    whoami
+                    echo "Host:"
+                    hostname
+                    echo "----------------------------------"
+				
                     echo "Installing static analysis tools"                    
                     pip3 install --no-cache-dir flake8 bandit
 
@@ -48,6 +55,13 @@ pipeline {
 				unstash 'source-code'
 			
 				sh '''
+				
+					echo "User:"
+                    whoami
+                    echo "Host:"
+                    hostname
+                    echo "----------------------------------"
+
 					echo "Building SAM application"
 					sam build
 
@@ -80,6 +94,13 @@ pipeline {
                 unstash 'api-url'
 				
 				sh '''
+				
+					echo "User:"
+                    whoami
+                    echo "Host:"
+                    hostname
+                    echo "----------------------------------"
+				
 					set -e
 
 					echo "Installing test dependencies"
@@ -106,6 +127,13 @@ pipeline {
 				
 				withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
 					sh '''
+					
+						echo "User:"
+                        whoami
+                        echo "Host:"
+                        hostname
+                        echo "----------------------------------"
+					
 						echo "Promoting release to master branch"
 
 						git config user.email "ci@jenkins"
