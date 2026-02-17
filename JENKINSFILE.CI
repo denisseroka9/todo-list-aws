@@ -92,7 +92,7 @@ pipeline {
 						git config user.name "Jenkins CI"
 
 						git checkout master
-						git pull https://$GITHUB_TOKEN@github.com/denisseroka9/todo-list-aws.git master
+						git pull --no-rebase https://$GITHUB_TOKEN@github.com/denisseroka9/todo-list-aws.git master
 
 						
 						git merge develop
