@@ -93,7 +93,6 @@ pipeline {
 
 						git checkout master
 						git merge develop
-						git push origin master
 						git push https://$GITHUB_TOKEN@github.com/denisseroka9/todo-list-aws.git master
 					'''
 				}
