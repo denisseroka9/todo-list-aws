@@ -7,6 +7,11 @@ pipeline {
             steps {
                 git branch: 'master',
                     url: 'https://github.com/denisseroka9/todo-list-aws.git'
+					
+				echo "Downloading samconfig.toml for PRODUCTION"
+				sh '''
+					curl -o samconfig.toml https://raw.githubusercontent.com/denisseroka9/todo-list-aws-config/production/samconfig.toml
+				'''
             }
         }
 	
@@ -23,7 +28,7 @@ pipeline {
 					sam validate
 
 					echo "Deploying to PRODUCTION environment"
-					sam deploy --stack-name todo-list-aws --config-env production --s3-bucket todo-list-aws-cd-production-denisse --region us-east-1 --no-confirm-changeset --no-fail-on-empty-changeset
+					sam deploy --config-env production --no-confirm-changeset --no-fail-on-empty-changeset
 				'''
 			}
 		}
