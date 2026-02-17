@@ -46,6 +46,9 @@ pipeline {
 					  --output text)
 
 					echo "BASE_URL = $BASE_URL"
+					
+					echo "Waiting for API stabilization..."
+					sleep 15
 
 					echo "Running READONLY integration tests with Pytest"
 					python3 -m pytest -m readonly test/integration/todoApiTest.py
