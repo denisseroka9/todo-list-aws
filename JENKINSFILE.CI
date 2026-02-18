@@ -69,7 +69,7 @@ pipeline {
 
 					echo "Obtaining API Base URL from CloudFormation"
 					export BASE_URL=$(aws cloudformation describe-stacks \
-					  --stack-name todo-list-aws \
+					  --stack-name todo-list-aws-staging \
 					  --query "Stacks[0].Outputs[?OutputKey=='BaseUrlApi'].OutputValue" \
 					  --output text)
 
