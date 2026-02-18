@@ -28,17 +28,7 @@ pipeline {
 					sam validate
 
 					echo "Deploying to PRODUCTION environment"
-					# sam deploy --config-env production --no-confirm-changeset --no-fail-on-empty-changeset
-					
-					sam deploy \
-					  --stack-name todo-list-aws-production \
-					  --s3-bucket todo-list-aws-cd-production-denisse \
-					  --region us-east-1 \
-					  --capabilities CAPABILITY_IAM \
-					  --parameter-overrides Stage="production" \
-					  --no-confirm-changeset \
-					  --no-fail-on-empty-changeset
-
+					sam deploy --config-env production --no-confirm-changeset --no-fail-on-empty-changeset					
 				'''
 			}
 		}
