@@ -102,7 +102,7 @@ pipeline {
 						git checkout master
 						git pull --no-rebase https://$GITHUB_TOKEN@github.com/denisseroka9/todo-list-aws.git master
 
-						git merge develop
+						git merge --no-ff develop
 						
 						echo "Restoring CD pipeline definitions"
 
