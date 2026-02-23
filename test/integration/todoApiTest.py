@@ -218,3 +218,35 @@ class TestApi(unittest.TestCase):
         )
         print('End - integration test Delete TODO')
     
+    @pytest.mark.readonly
+    def test_api_listtodos_readonly(self):
+        print('---------------------------------------')
+        print('Starting - READONLY integration test List TODO')
+
+        url = BASE_URL + "/todos"
+        response = requests.get(url)
+
+        self.assertEqual(
+            response.status_code, 200, f"Error en la petición API a {url}"
+        )
+        self.assertIsNotNone(response.json())
+
+        print('End - READONLY integration test List TODO')
+
+    @pytest.mark.readonly
+    def test_api_gettodo_readonly(self):
+        print('---------------------------------------')
+        print('Starting - READONLY integration test Get TODO')
+
+        url = BASE_URL + "/todos"
+        response = requests.get(url)
+        self.assertEqual(response.status_code, 200)
+
+        todos = response.json()
+
+        if len(todos) > 0:
+            todo_id = todos[0]['id']
+            response = requests.get(BASE_URL + "/todos/" + todo_id)
+            self.assertEqual(response.status_code, 200)
+
+        print('End - READONLY integration test Get TODO')
