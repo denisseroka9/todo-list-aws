@@ -1,0 +1,128 @@
+pipeline {
+    agent any
+
+    stages {
+
+        stage('Get Code') {
+            steps {
+                git branch: 'develop',
+                    url: 'https://github.com/denisseroka9/todo-list-aws.git'
+					
+				echo "Downloading samconfig.toml for STAGING"
+				sh '''
+					curl -o samconfig.toml https://raw.githubusercontent.com/denisseroka9/todo-list-aws-config/staging/samconfig.toml
+				'''
+            }
+        }
+
+        stage('Static Test') {
+            steps {
+                sh '''
+                    echo "Installing static analysis tools"                    
+                    pip3 install --no-cache-dir flake8 bandit
+
+                    echo "Creating reports directory"
+                    mkdir -p reports
+
+                    echo "Running Flake8"
+                     python3 -m flake8 src > reports/flake8.txt || true
+
+                    echo "Running Bandit"
+                    python3 -m bandit -r src -f txt -o reports/bandit.txt || true
+                '''
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'reports/*.txt'
+                }
+            }
+        }
+
+		stage('Deploy SAM') {
+		    environment {
+				AWS_DEFAULT_REGION = 'us-east-1'
+			}
+			steps {
+				sh '''
+					echo "Building SAM application"
+					sam build
+
+					echo "Validating SAM template"
+					sam validate
+
+					echo "Deploying to STAGING environment"
+					sam deploy --config-env staging --no-confirm-changeset --no-fail-on-empty-changeset
+				'''
+			}
+		}
+		
+		stage('Rest Tests') {
+			environment {
+				AWS_DEFAULT_REGION = 'us-east-1'
+			}
+			steps {
+				sh '''
+					set -e
+
+					echo "Installing test dependencies"
+					pip3 install --no-cache-dir pytest requests
+
+					echo "Obtaining API Base URL from CloudFormation"
+					export BASE_URL=$(aws cloudformation describe-stacks \
+					  --stack-name todo-list-aws-staging \
+					  --query "Stacks[0].Outputs[?OutputKey=='BaseUrlApi'].OutputValue" \
+					  --output text)
+
+					echo "BASE_URL = $BASE_URL"
+					
+					echo "Waiting for API stabilization..."
+					sleep 15
+
+					echo "Running integration tests with Pytest"
+					python3 -m pytest test/integration/todoApiTest.py
+				'''
+			}
+		}
+		
+		stage('Promote') {
+			when {
+				expression { currentBuild.currentResult == 'SUCCESS' }
+			}
+			steps {
+				withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
+					sh '''
+						echo "Cleaning temporary configuration file"
+						rm -f samconfig.toml
+						
+						echo "Promoting release to master branch"
+
+						git config user.email "ci@jenkins"
+						git config user.name "Jenkins CI"
+
+						git checkout master
+						git pull --no-rebase https://$GITHUB_TOKEN@github.com/denisseroka9/todo-list-aws.git master
+
+						git merge develop
+						
+						echo "Restoring CD pipeline definitions"
+
+						git checkout --ours Jenkinsfile
+						git checkout --ours Jenkinsfile_agentes
+
+						git add Jenkinsfile
+						git add Jenkinsfile_agentes
+
+						git commit -m "Merge develop into master keeping CD pipeline definitions"
+
+						
+						git push https://$GITHUB_TOKEN@github.com/denisseroka9/todo-list-aws.git master
+					'''
+				}
+			}
+		}
+
+    }
+}
+	
+
+
