@@ -112,8 +112,6 @@ pipeline {
 						git add Jenkinsfile
 						git add Jenkinsfile_agentes
 
-						git commit -m "Merge develop into master keeping CD pipeline definitions"
-
 						
 						git push https://$GITHUB_TOKEN@github.com/denisseroka9/todo-list-aws.git master
 					'''
