@@ -5,41 +5,18 @@ pipeline {
 
         stage('Get Code') {
             steps {
-                git branch: 'develop',
+                git branch: 'master',
                     url: 'https://github.com/denisseroka9/todo-list-aws.git'
 					
-				echo "Downloading samconfig.toml for STAGING"
+				echo "Downloading samconfig.toml for PRODUCTION"
 				sh '''
-					curl -o samconfig.toml https://raw.githubusercontent.com/denisseroka9/todo-list-aws-config/staging/samconfig.toml
+					curl -o samconfig.toml https://raw.githubusercontent.com/denisseroka9/todo-list-aws-config/production/samconfig.toml
 				'''
             }
         }
-
-        stage('Static Test') {
-            steps {
-                sh '''
-                    echo "Installing static analysis tools"                    
-                    pip3 install --no-cache-dir flake8 bandit
-
-                    echo "Creating reports directory"
-                    mkdir -p reports
-
-                    echo "Running Flake8"
-                     python3 -m flake8 src > reports/flake8.txt || true
-
-                    echo "Running Bandit"
-                    python3 -m bandit -r src -f txt -o reports/bandit.txt || true
-                '''
-            }
-            post {
-                always {
-                    archiveArtifacts artifacts: 'reports/*.txt'
-                }
-            }
-        }
-
+	
 		stage('Deploy SAM') {
-		    environment {
+			environment {
 				AWS_DEFAULT_REGION = 'us-east-1'
 			}
 			steps {
@@ -50,12 +27,12 @@ pipeline {
 					echo "Validating SAM template"
 					sam validate
 
-					echo "Deploying to STAGING environment"
-					sam deploy --config-env staging --no-confirm-changeset --no-fail-on-empty-changeset
+					echo "Deploying to PRODUCTION environment"
+					sam deploy --config-env production --no-confirm-changeset --no-fail-on-empty-changeset					
 				'''
 			}
 		}
-		
+	
 		stage('Rest Tests') {
 			environment {
 				AWS_DEFAULT_REGION = 'us-east-1'
@@ -67,9 +44,9 @@ pipeline {
 					echo "Installing test dependencies"
 					pip3 install --no-cache-dir pytest requests
 
-					echo "Obtaining API Base URL from CloudFormation"
+					echo "Obtaining API Base URL from CloudFormation (PRODUCTION)"
 					export BASE_URL=$(aws cloudformation describe-stacks \
-					  --stack-name todo-list-aws-staging \
+					  --stack-name todo-list-aws-production \
 					  --query "Stacks[0].Outputs[?OutputKey=='BaseUrlApi'].OutputValue" \
 					  --output text)
 
@@ -78,49 +55,11 @@ pipeline {
 					echo "Waiting for API stabilization..."
 					sleep 15
 
-					echo "Running integration tests with Pytest"
-					python3 -m pytest test/integration/todoApiTest.py
+					echo "Running READONLY integration tests with Pytest"
+					python3 -m pytest -m readonly test/integration/todoApiTest.py
 				'''
 			}
 		}
-		
-		stage('Promote') {
-			when {
-				expression { currentBuild.currentResult == 'SUCCESS' }
-			}
-			steps {
-				withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
-					sh '''
-						echo "Cleaning temporary configuration file"
-						rm -f samconfig.toml
-						
-						echo "Promoting release to master branch"
-
-						git config user.email "ci@jenkins"
-						git config user.name "Jenkins CI"
-
-						git checkout master
-						git pull --no-rebase https://$GITHUB_TOKEN@github.com/denisseroka9/todo-list-aws.git master
-
-						git merge --no-ff develop
-						
-						echo "Restoring CD pipeline definitions"
-
-						git checkout --ours Jenkinsfile
-						git checkout --ours Jenkinsfile_agentes
-
-						git add Jenkinsfile
-						git add Jenkinsfile_agentes
-
-						
-						git push https://$GITHUB_TOKEN@github.com/denisseroka9/todo-list-aws.git master
-					'''
-				}
-			}
-		}
-
-    }
-}
 	
-
-
+	}
+}	
