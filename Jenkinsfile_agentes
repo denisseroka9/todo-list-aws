@@ -146,6 +146,8 @@ pipeline {
 
 						git config user.email "ci@jenkins"
 						git config user.name "Jenkins CI"
+						
+						git config merge.ours.driver true
 
 						git checkout master
 						git pull --no-rebase https://$GITHUB_TOKEN@github.com/denisseroka9/todo-list-aws.git master
