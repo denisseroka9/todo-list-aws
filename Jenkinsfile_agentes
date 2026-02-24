@@ -6,6 +6,9 @@ pipeline {
         stage('Get Code') {
 			 agent { label 'deploy' } 
             steps {
+			
+				deleteDir()
+			
                 git branch: 'develop',
                     url: 'https://github.com/denisseroka9/todo-list-aws.git'
 					
