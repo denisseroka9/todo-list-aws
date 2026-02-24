@@ -102,15 +102,8 @@ pipeline {
 						git checkout master
 						git pull --no-rebase https://$GITHUB_TOKEN@github.com/denisseroka9/todo-list-aws.git master
 
-						git merge --no-ff develop
-						
-						echo "Restoring CD pipeline definitions"
 
-						git checkout --ours Jenkinsfile
-						git checkout --ours Jenkinsfile_agentes
-
-						git add Jenkinsfile
-						git add Jenkinsfile_agentes
+						git merge develop
 
 						
 						git push https://$GITHUB_TOKEN@github.com/denisseroka9/todo-list-aws.git master
