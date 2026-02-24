@@ -6,6 +6,9 @@ pipeline {
         stage('Get Code') {
 			agent { label 'deploy' }
             steps {
+			
+				deleteDir()
+			
                 git branch: 'master',
                     url: 'https://github.com/denisseroka9/todo-list-aws.git'
 					
@@ -36,11 +39,11 @@ pipeline {
 					sam validate
 
 					echo "Deploying to PRODUCTION environment"
-					sam deploy --stack-name todo-list-aws --config-env production --s3-bucket todo-list-aws-cd-production-denisse --region us-east-1 --no-confirm-changeset --no-fail-on-empty-changeset
+					sam deploy --stack-name production --config-env production --s3-bucket todo-list-aws-cd-production-denisse --region us-east-1 --no-confirm-changeset --no-fail-on-empty-changeset
 					
 					echo "Obtaining API Base URL from CloudFormation (PRODUCTION)"
                     BASE_URL=$(aws cloudformation describe-stacks \
-                      --stack-name todo-list-aws \
+                      --stack-name production \
                       --query "Stacks[0].Outputs[?OutputKey=='BaseUrlApi'].OutputValue" \
                       --output text)
 					  
