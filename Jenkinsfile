@@ -101,8 +101,7 @@ pipeline {
 
 						git config merge.ours.driver true
 
-						git fetch origin master
-						git checkout -B master origin/master
+						git checkout master
 						git pull --no-rebase https://$GITHUB_TOKEN@github.com/denisseroka9/todo-list-aws.git master
 
 
