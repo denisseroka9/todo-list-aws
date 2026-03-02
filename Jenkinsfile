@@ -5,8 +5,6 @@ pipeline {
 
         stage('Get Code') {
             steps {
-                git branch: 'develop',
-                    url: 'https://github.com/denisseroka9/todo-list-aws.git'
 					
 				echo "Downloading samconfig.toml for STAGING"
 				sh '''
@@ -86,7 +84,9 @@ pipeline {
 		
 		stage('Promote') {
 			when {
-				expression { currentBuild.currentResult == 'SUCCESS' }
+				allOf {
+					branch 'develop'
+					expression { currentBuild.currentResult == 'SUCCESS' }
 			}
 			steps {
 				withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
